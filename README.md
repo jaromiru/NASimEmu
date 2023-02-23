@@ -1,6 +1,3 @@
-# Issuing an action (-, -1) is a TerminalAction that performs NoOP and resets the environment
-# change: commented fix env.py:191
-
 # NASimEmu: Network Attack Simulator & Emulator
 
 ## Introduction
@@ -23,7 +20,7 @@ import nasimemu, nasimemu.env_utils as env_utils
 
 # In this example, a scenario instance is randomly generated from either 'entry_dmz_one_subnet' or 'entry_dmz_two_subnets' on every new episode. Make sure the path to scenarios is correct.
 # To use emulation, setup Vagrant and change emulate=True.
-env = gym.make('NASimEmu-v0', emulate=True, scenario_name='scenarios/entry_dmz_one_subnet.v2.yaml:scenarios/entry_dmz_two_subnets.v2.yaml')
+env = gym.make('NASimEmu-v0', emulate=False, scenario_name='scenarios/entry_dmz_one_subnet.v2.yaml:scenarios/entry_dmz_two_subnets.v2.yaml')
 s = env.reset()
 
 # To see the emulation logs, uncomment the following:
