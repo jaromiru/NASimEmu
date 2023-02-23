@@ -83,4 +83,4 @@ Please, be aware of the following:
 
 ## Acknowledgements
 
-[@bastien-buil] (https://www.github.com/bastien-buil) - windows emulation, bugfixes and part of documentation
+[@bastien-buil](https://www.github.com/bastien-buil) - windows emulation, bugfixes and part of documentation
