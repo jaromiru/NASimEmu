@@ -56,14 +56,14 @@ The simulation is based on Network Attack Simulator and you can read its docs he
 
 These are the changes in NaSimEmu:
 
-- Support for new [v2 scenarios](](docs/SCENARIOS.md), which define classes of problems from which random instances are generated. The v2 scenarios define a topology, sensitive subnets, services, processes and exploits. However, the generated instances vary in number of hosts in subnets and hosts' configuration. For example, you can define scenarios representing "bank", "university" or "enterprise" domains.
+- Support for new [v2 scenarios](docs/SCENARIOS.md), which define classes of problems from which random instances are generated. The v2 scenarios define a topology, sensitive subnets, services, processes and exploits. However, the generated instances vary in number of hosts in subnets and hosts' configuration. For example, you can define scenarios representing "bank", "university" or "enterprise" domains.
 - Agent can be trained or deployed in multiple scerarios at once. This is useful to test generalization and transfer learning of the agent. E.g., how does it perform in the "enterprise" scenario when trained only in "bank" and "university"?
 - The interface has been changed to true partial observability. That is, the agent cannot infer the number of hosts or subnets in the current scenario instance and all other unknown information is masked. To aleviate memorization of acquired information, the observation at each step records all the information gathered so far. Further, host and subnet ids are scrambled to avoid their memorization.
 
 ## Emulation
 The emulation is made with [Vagrant](https://www.vagrantup.com/) and [VirtualBox](https://www.virtualbox.org/). You will need to install these on your system first. A scenario is converted into a Vagrantfile and deployed. The vagrant spawns a virtual machine for each host in the scenario (currently, Ubuntu and Windows machines are available) and configures them properly. Additionally, it deploys one [RouterOS](https://wiki.mikrotik.com/wiki/Manual:RouterOS_FAQ) based router that segments the network into subnets and one attacker machine that runs [Kali Linux](https://www.kali.org/) and uses [Metasploit](https://www.metasploit.com/) with pre-configured exploits to run.
 
-For more information about emulation, see [Emulation Doc](docs/EMULATION.md).
+For more information about emulation, see [EMULATION](docs/EMULATION.md).
 
 ## Limitations / Properties
 Please, be aware of the following:
