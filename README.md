@@ -5,7 +5,9 @@ This project is based on [Network Attack Simulator](https://github.com/Jjschwart
 
 ## Instalation
 Make sure you use latest `pip`:
-```pip install --upgrade pip```
+```
+pip install --upgrade pip
+```
 
 Clone the repository and install it locally (`-e` for development mode):
 ```
