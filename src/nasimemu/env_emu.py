@@ -386,25 +386,15 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     logging.getLogger('urllib3').setLevel(logging.INFO)
 
-    scenario = nasim.load_scenario("nasim_emulation/test_scenarios/JJ_windows_test.yaml")
+    scenario = nasim.load_scenario("scenarios/test_scenario.yaml")
     env = EmulatedNASimEnv(scenario=scenario)
-
-    # env.emulated_network._contains_loot(1)
-    # print(env.emulated_network._is_session_root(7))
-    # s = env.reset()
-    # print(s)
 
     # a = nasim.envs.action.SubnetScan(target=(1,0), cost=1.0)
     # a = nasim.envs.action.OSScan(target=(1,0), cost=1.0)
     # a = nasim.envs.action.Exploit(name='e_proftpd', service='proftpd', target=(1,0), cost=1.0)
     # a = nasim.envs.action.Exploit(name='e_drupal', service='drupal', target=(1,0), cost=1.0)
     # a = nasim.envs.action.PrivilegeEscalation(name='pe_kernel', process=None, access=1, target=(1,0), cost=1.0)
-
-    # a = nasim.envs.action.Exploit(name='e_elasticsearch', service='9200_windows_elasticsearch', os='windows', target=(1,0), cost=1.0)
-    # s, r, d, i = env.step(a)
-    # print(s, r, d, i)
-
-    # a = nasim.envs.action.Exploit(name='e_wp_ninja', service='80_windows_wp_ninja', os='windows', target=(1,0), cost=1.0)
     a = nasim.envs.action.ServiceScan(target=(1,0), cost=1.0)
+
     s, r, d, i = env.step(a)
     print(s, r, d, i)

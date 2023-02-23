@@ -220,17 +220,3 @@ class NASimEmuEnv(gym.Env):
 
     def render_state(self):
         self.env.render_state()
-
-if __name__ == '__main__':
-    np.set_printoptions(threshold=np.inf, linewidth=200, precision=4, suppress=True)
-    env = GraphNASimEnv(scenario_name='huge-gen-rgoal', verbose=False, fully_obs=False)
-    s = env.reset()
-
-    while True:
-        [print(i, x) for i, x in enumerate(env.action_list)]
-        # subnet, host = int(input("Subnet: ")), int(input("Host: "))
-        subnet, host = 1, 0
-        action = int(input("Action: "))
-
-        a = [(subnet, host), action]
-        s, r, d, i = env.step(a)

