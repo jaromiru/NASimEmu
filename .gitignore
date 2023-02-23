@@ -1,0 +1,5 @@
+__pycache__
+*.egg-info
+_*/
+vagrant/Vagrantfile
+vagrant/firewall.rsc

@@ -1,0 +1,1 @@
+Write-Host "Stopping mysql (no-op - already stopped)"
