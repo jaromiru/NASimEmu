@@ -3,3 +3,4 @@ __pycache__
 _*/
 vagrant/Vagrantfile
 vagrant/firewall.rsc
+scenarios/*.pdf

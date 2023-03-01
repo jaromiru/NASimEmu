@@ -6,6 +6,9 @@ address_space_bounds: (5, 10) # fix for the experiment - all scenarios have to h
 topology: [[ 1, 1, 0],
            [ 1, 1, 1],
            [ 0, 1, 1]]
+subnet_labels: # useful only for visualization and debugging
+  1: DMZ
+  2: user
 sensitive_hosts:  # probabilities of sensitive hosts in specific subnets
   1: 0.  # DMZ
   2: 0.  # user subnet

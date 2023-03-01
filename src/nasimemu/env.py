@@ -1,6 +1,6 @@
 import gym, random, copy
 import numpy as np
-from nasimemu import nasim
+from nasimemu import nasim, env_utils
 
 from nasimemu.nasim.envs.action import Exploit, PrivilegeEscalation, ServiceScan, OSScan, SubnetScan, ProcessScan, NoOp
 import nasimemu.nasim.scenarios.benchmark as benchmark
@@ -61,8 +61,9 @@ class PartiallyObservableWrapper():
 
         return obs
 
+# observation_format in ['matrix', 'graph']
 class NASimEmuEnv(gym.Env):
-    def __init__(self, scenario_name, emulate=False, step_limit=None, random_init=False, fully_obs=False, verbose=False):
+    def __init__(self, scenario_name, emulate=False, step_limit=None, random_init=False, observation_format='matrix', fully_obs=False, verbose=False):
         # different processes need different seeds
         random.seed()
         np.random.seed()
@@ -71,6 +72,7 @@ class NASimEmuEnv(gym.Env):
         self.step_limit = step_limit
         self.verbose = verbose
         self.fully_obs = fully_obs
+        self.observation_format = observation_format
 
         self.scenario_name = scenario_name
         self.random_init = random_init
@@ -176,6 +178,9 @@ class NASimEmuEnv(gym.Env):
         i['s_raw'] = s
         i['a_raw'] = a
 
+        if self.observation_format == 'graph':
+            s = env_utils.convert_to_graph(s)
+
         i['s_true'] = s
         i['d_true'] = d
         i['step_idx'] = self.step_idx
@@ -187,7 +192,7 @@ class NASimEmuEnv(gym.Env):
             s = self.reset()
 
         i['done'] = d
-        # i['d_true'] = d # fix: this will disable the difference between true termination and step_limit exceedance - both are treated the same
+        i['d_true'] = d # fix: this will disable the difference between true termination and step_limit exceedance - both are treated the same
 
         return s, r, d, i
 
@@ -199,6 +204,9 @@ class NASimEmuEnv(gym.Env):
 
         if not self.fully_obs:
             s = self.env_po_wrapper.reset(s)
+
+        if self.observation_format == 'graph':
+            s = env_utils.convert_to_graph(s)
 
         # break the tie with random offset
         if self.random_init:
