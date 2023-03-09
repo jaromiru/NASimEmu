@@ -1,23 +1,17 @@
 # This is special scenario format, that leaves some variables to chance. Not compatible with the original nasim generator/loader.
 
-subnets: [2-5, 1, 2-5, 1-3] # ranges of hosts in subnets
-# address_space_bounds: (4, 5)  # max number of subnets & hosts in a subnet
+subnets: [1, 2-5] # ranges of hosts in subnets
+# address_space_bounds: (2, 8)  # max number of subnets & hosts in a subnet
 address_space_bounds: (5, 10) # fix for the experiment - all scenarios have to have the same bounds
-topology: [[ 1, 1, 0, 0, 0],
-           [ 1, 1, 1, 0, 0],
-           [ 0, 1, 1, 1, 1],
-           [ 0, 0, 1, 1, 0],
-           [ 0, 0, 1, 0, 1]]
-subnet_labels:
-  1: user
-  2: DMZ
-  3: service
-  4: db           
+topology: [[ 1, 1, 0],
+           [ 1, 1, 1],
+           [ 0, 1, 1]]
+subnet_labels: # useful only for visualization and debugging
+  1: DMZ
+  2: user
 sensitive_hosts:  # probabilities of sensitive hosts in specific subnets
-  1: 0.  # user #1 subnet
-  2: 0.  # DMZ
-  3: 0.3 # service subnet
-  4: 0.8 # db subnet
+  1: 0.  # DMZ
+  2: 0.  # user subnet
 os:
   - linux
   - windows
