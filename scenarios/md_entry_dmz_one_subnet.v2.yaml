@@ -1,6 +1,6 @@
 # This is special scenario format, that leaves some variables to chance. Not compatible with the original nasim generator/loader.
 
-subnets: [1, 5-10] # ranges of hosts in subnets
+subnets: [1, 6-10] # ranges of hosts in subnets
 # address_space_bounds: (2, 8)  # max number of subnets & hosts in a subnet
 address_space_bounds: (5, 10) # fix for the experiment - all scenarios have to have the same bounds
 topology: [[ 1, 1, 0],
