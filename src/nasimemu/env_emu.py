@@ -9,7 +9,7 @@ import numpy as np, time, ipaddress
 
 from nasimemu.msf_interface import MsfClient
 
-WHOLE_NETWORK = '192.168.1-3.100-105'
+WHOLE_NETWORK = '192.168.1-5.100-110'
 
 class EmulatedNetwork():
     def __init__(self, host_dim, scenario):
@@ -290,7 +290,7 @@ class EmulatedNetwork():
         info = {'success': False}
 
         rhost = self._target_to_ip(a.target)
-        res = self.msfclient.scan_portscan(rhost, '21,80,3306,9200', threads=1)
+        res = self.msfclient.scan_portscan(rhost, '21,80,3306,9200')
         open_ports = [x.split(':')[1] for x  in res]
 
         exploitable_services = {service: False for service in self.scenario.services}
