@@ -21,7 +21,7 @@ dependencies = [
     "retry", # For pymetasploit3
     "pillow", # For nasim_problem rendering
     "plotly", # For nasim_problem debug
-    "pygame", # For nasim play
     "scipy", # For networkx
-    "kaleido", # Image with plotly for nasim play
+    # "pygame", # For nasim play
+    # "kaleido", # Image with plotly for nasim play
 ]
