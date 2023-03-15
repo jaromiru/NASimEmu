@@ -8,20 +8,19 @@ from pathlib import Path
 
 from .env_emu import EmulatedNetwork
 from .nasim.scenarios import load_scenario
+from .nasim.envs import NASimEnv
 
 class VagrantGenerator:
 
-    def __init__(self, scenario, vagrant_file, routeos_file):
-        self.hosts = scenario.hosts
-        self.sensitive_hosts = scenario.sensitive_hosts
+    def __init__(self, scenario, vagrant_file):
+        self.scenario = scenario
         self.vagrant_file = vagrant_file
-        self.routeos_file = routeos_file
         self.generate_vagrant()
 
     def generate_vagrant(self):
         self.write_header()
-        for host in self.hosts:
-            self.add_host(self.hosts[host], self.hosts[host].address in self.sensitive_hosts)
+        for host in self.scenario.hosts:
+            self.add_host(self.scenario.hosts[host], self.scenario.hosts[host].address in self.scenario.sensitive_hosts)
         self.write_footer()
 
     def write_header(self):
@@ -145,7 +144,7 @@ end
         ip = EmulatedNetwork._target_to_ip(host.address)
         subnet = host.address[0]
         box, box_version = self._get_box_from_os(host.os)
-        netmask = "255.255.255.0"  # should probably be changed
+        netmask = "255.255.255.0" 
         provision = self._get_provision_line(host.os, host.services, ip, subnet, varname, is_sensitive)
 
         self.vagrant_file.write(self._get_host_description(varname, hostname, ip, box, box_version, netmask, provision))
@@ -170,19 +169,17 @@ class RouteOsGenerator:
         self.out.write(text_output)
 
 class VagrantClient:
-
-    def __init__(self, scenario, dst_file, routeos_file, routeos_gen=True):
+    def __init__(self, scenario, dst_file, routeos_file):
         self.scenario = scenario
+
         self.dst_file = dst_file
         self.routeos_file = routeos_file
+        
         self.logger = logging.getLogger("VagrantInterface")
 
-        if routeos_gen:
-            self.generate_routeos_file()
-        else:
-            self.logger.info("Routeos file generation is disabled, so no routeos files will be generated.")
+        self.generate_routeos_file()
         self.generate_vagrant_file()
-        self.launch_vagrant()
+        # self.launch_vagrant()
 
     def generate_routeos_file(self):
         self.logger.info("Generating routeos firewall file.")
@@ -191,12 +188,13 @@ class VagrantClient:
 
 
     def generate_vagrant_file(self):
+        self.logger.info("Generating Vagrantfile.")
         with open(self.dst_file, "w") as file:
-            VagrantGenerator(self.scenario, file, self.routeos_file)
+            VagrantGenerator(self.scenario, file)
 
-    def launch_vagrant(self):
-        self.logger.info("Vagrant file generated, you can now launch the virtual machines with vagrant.")
-        # input()
+    # def launch_vagrant(self):
+    #     self.logger.info("Vagrant file generated, you can now launch the virtual machines with vagrant.")
+    #     # input()
         # subprocess.run(["vagrant", "up", "--provision", "--parallel", "--no-tty"], cwd="nasim_emulation/vagrant")
 
 if __name__ == '__main__':
@@ -214,7 +212,14 @@ if __name__ == '__main__':
     if args.routeros is None:
         args.routeros = str(Path(args.file).with_suffix('.rsc'))
 
-    print(args.dst, args.routeros)
+    print(f"Vagrantfile: {args.dst}, routeros file: {args.routeros}")
 
     scenario = load_scenario(args.file)
-    VagrantClient(scenario, args.dst, args.routeros, routeos_gen=True)
+
+    print("\nGenerated scenario:")
+    env = NASimEnv(scenario)
+    env.reset()
+    env.render_state()
+    print("")
+
+    VagrantClient(scenario, args.dst, args.routeros)
