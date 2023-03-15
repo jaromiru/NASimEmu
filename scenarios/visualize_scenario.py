@@ -2,7 +2,7 @@ import networkx as nx
 import plotly.graph_objects as go
 import plotly.io as pio   
 import numpy as np
-import argparse, yaml, string, pathlib
+import argparse, yaml, string, pathlib, math
 
 def plot(graph, node_data):
     edge_x = []
@@ -53,8 +53,18 @@ def make_graph(scenario):
 
     subnet_annotation = lambda node_id: f'<b>Subnet {string.ascii_uppercase[node_id-1]} ({scenario["subnet_labels"][node_id]})</b><br>nodes=[{scenario["subnets"][node_id-1]}], sensitivity={scenario["sensitive_hosts"][node_id]}'
     node_color = lambda node_id: f'rgb({scenario["sensitive_hosts"][node_id] * 191 + 64}, 64, 64)'
+    
+    def node_size(node_id):
+        sub = scenario["subnets"][node_id-1]
+        if type(sub) is str:
+            sub_size = int(scenario["subnets"][node_id-1].split('-')[-1])
+        else:
+            sub_size = sub
+
+        return math.sqrt(sub_size) * 20
+
     node_data['text']  = ['<b>Attacker</b>' if node_id == 0 else subnet_annotation(node_id) for node_id in graph.nodes]
-    node_data['marker'] = dict(size=50, color=['orange' if node_id == 0 else node_color(node_id) for node_id in graph.nodes])
+    node_data['marker'] = dict(opacity=1.0, size=[20 if node_id == 0 else node_size(node_id) for node_id in graph.nodes], color=['orange' if node_id == 0 else node_color(node_id) for node_id in graph.nodes])
 
     return graph, node_data
 
@@ -84,4 +94,4 @@ if __name__ == '__main__':
     print(f'Exporting to "{pdf_file}"')
 
     pio.kaleido.scope.mathjax = None
-    fig.write_image(pdf_file, width=500, height=500, scale=0.9)
+    fig.write_image(pdf_file, width=500, height=500, scale=1.0)
