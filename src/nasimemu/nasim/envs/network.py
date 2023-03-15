@@ -81,6 +81,10 @@ class Network:
             result = ActionResult(False, 0.0, connection_error=True)
             return next_state, result
 
+        if action.is_process_scan() and not host_compromised:    # processes can only be scanned if the user has a local access
+            result = ActionResult(False, 0.0, connection_error=True)
+            return next_state, result
+
         if action.is_exploit() and host_compromised:
             # host already compromised so exploits don't fail due to randomness
             pass
