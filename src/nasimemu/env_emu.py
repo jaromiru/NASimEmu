@@ -168,18 +168,54 @@ class EmulatedNetwork():
         info['success'] = True
         return host_vecs, info
 
-    def _post_exploitation(self, session_id, os, host_address):
-        if os is None:  # some actions may have blank os, so try to detect it here (should not happen in the standard scenarios)
-            os = self.msfclient.get_os_by_cmd(session_id)
+    # TODO: not done
+    # def _check_services_locally(self, session_id, os):
+    #     available_services = []
 
-        osdict = {os: False for os in self.scenario.os}
-        osdict[os] = True
+    #     if os == "linux":
+    #         apache_running = "Connected to " in self.run_shell_command(session_id, "echo \"\x1dclose\x0d\" | telnet localhost 80", os='linux')
+
+    #         if apache_running:
+    #             www_dir_list = self.run_shell_command(session_id, f'ls -1 "/var/www/html/"', os='linux').split("\n")
+    #             if "phpwiki" in www_dir_list:
+    #                 available_services.append("80_phpwiki")
+    #             if "drupal" in www_dir_list:
+    #                 available_services.append("80_drupal")
+
+    #         proftpd_connected = "Connected to " in self.run_shell_command(session_id, "echo \"\x1dclose\x0d\" | telnet localhost 21", os='linux')
+    #         if proftpd_connected:
+    #             available_services.append("21_proftpd")
+    #         return available_services
+
+    #     elif os == "windows": # TODO: check
+    #         available_services = []
+    #         services_request_result = self.run_shell_command(session_id, "sc query | findstr \"SERVICE_NAME\"", os='windows').splitlines()
+    #         characters_to_skip = len("SERVICE_NAME: ")
+    #         services_request_result = [line[characters_to_skip:] for line in services_request_result if line.startswith("SERVICE_NAME: ")]
+    #         if "wampapache" in services_request_result:
+    #             wamp_web_dir = "C:\\wamp\\www"
+    #             www_dirs_result = self.run_shell_command(session_id, f'dir {wamp_web_dir} /a', os='windows')
+    #             if "wordpress" in www_dirs_result:
+    #                 available_services.append("80_wp_ninja")
+    #         if "elasticsearch-service-x64" in services_request_result:
+    #             available_services.append("9200_elasticsearch")
+    #         return available_services
+    #     else:
+    #         return []
+
+
+    def _post_exploitation(self, session_id, os, host_address):
+        # if os is None:  # some actions may have blank os, so try to detect it here (should not happen in the standard scenarios)
+        #     os = self.msfclient.get_os_by_cmd(session_id)
+
+        # osdict = {os: False for os in self.scenario.os}
+        # osdict[os] = True
 
         # recover true services
-        servicesdict = {service: False for service in self.scenario.services}
-        services = self.msfclient.get_services_by_cmd(session_id, os)
-        for srv in services:
-            servicesdict[srv] = True
+        # servicesdict = {service: False for service in self.scenario.services}
+        # services = self.msfclient.get_services_by_cmd(session_id, os)
+        # for srv in services:
+        #     servicesdict[srv] = True
 
         # check for loot
         if self._contains_loot(session_id, os):
@@ -197,8 +233,9 @@ class EmulatedNetwork():
         # check access
         access = 2 if self._is_session_root(session_id, os) else 1
 
+        # TODO: discrepancy -- the simulator returns all services when successfully exploited; here we just skip that
         # create host vector
-        host = Host(host_address, os=osdict, services=servicesdict, processes=dict(), firewall=None, value=value, discovery_value=0.,
+        host = Host(host_address, os=dict(), services=dict(), processes=dict(), firewall=None, value=value, discovery_value=0.,
                                                 compromised=True, reachable=True, discovered=True, access=access)
         host_vec = HostVector.vectorize(host, None).numpy()
 

