@@ -80,3 +80,11 @@ If you leave the network up for longer than 24 hours, the router needs to be res
 vagrant destroy -f router
 vagrant up router
 ```
+
+Sometimes, the `msfrcpd` does not respond properly. In that case, log in to the `attacker` machine and restart it.
+```
+vagrant ssh attacker
+ps x # find the msfrcpd PID
+kill <PID>
+msfrpcd -P msfpassword
+```
