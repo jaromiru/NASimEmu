@@ -139,7 +139,9 @@ class NASimEmuEnv(gym.Env):
         # print(a_class, a_params, target, action_id)
         a = a_class(target=tuple(target), **a_params)
 
-        assert a in self.env.action_space.actions, "Failed to execute " + str(a)
+        if not self.emulate: # in emulation, we don't know the exact scenario configuration; hence the actions can be different
+            assert a in self.env.action_space.actions, "Failed to execute " + str(a)
+
         return a
 
     # action = ((subnet, host), action_id)
