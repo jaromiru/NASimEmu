@@ -47,11 +47,11 @@ class EmulatedNetwork():
             res = self.msfclient.run_shell_command(session_id, f'test -f {loot_file}; echo NO_LOOT=$?')
             return "NO_LOOT=0" in res
         elif os == 'windows':
-            loot_file = "C:\\loot"
-            res = self.msfclient.run_shell_command(session_id, f'IF EXIST {loot_file} ECHO file exists', os='windows')
-            return "file exists" in res
+            # loot_file = "C:\\loot"
+            res = self.msfclient.run_shell_command(session_id, f'DIR C:', os='windows')
+            return "loot" in res
         else:
-            return None
+            raise Exception('Unknown OS')
 
     def _recover_loot(self, session_id, os):
         if os == 'linux':
@@ -66,13 +66,12 @@ class EmulatedNetwork():
             loot_file = 'C:\\loot'
             res = self.msfclient.run_shell_command(session_id, f'type {loot_file}', os='windows')
 
-            loot = [line for line in res.split('\n') if "LOOT=" in line]
-            if len(loot) > 0:
-                return loot[0]
+            if "LOOT=" in res:
+                return res
             else:
                 return None
         else:
-            return None
+            raise Exception('Unknown OS')
 
     def _get_action_result(self):
         a_res =  np.zeros(self.host_dim)        # TODO: auxiliary action result - see observation.py from_action_result()
@@ -407,7 +406,7 @@ class EmulatedNASimEnv(NASimEnv):
         return s
 
     def step(self, a):
-        time.sleep(1)
+        time.sleep(2)
 
         self.logger.info(f"step() with {a}")
         s, i = self.emulated_network.translate_action(a)
