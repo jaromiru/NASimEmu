@@ -1,6 +1,9 @@
 from nasimemu.nasim.envs.host_vector import HostVector
 import numpy as np
 
+import networkx as nx 
+import plotly.graph_objects as go
+
 def get_possible_actions(env, s):
     # gather all possible addresses
     addresses = []
@@ -35,7 +38,6 @@ def _gen_edge_index(node_index, subnets):
     edge_index = np.concatenate(edge_index).T
     return edge_index
 
-
 def convert_to_graph(s):
     hosts_discovered = s[:-1, HostVector._discovered_idx] == 1
 
@@ -64,3 +66,126 @@ def convert_to_graph(s):
     edge_index = _gen_edge_index(node_index, subnets_discovered)
 
     return node_feats, edge_index, node_index
+
+# inspired from https://plotly.com/python/network-graphs/
+def _plot(G, env):
+    edge_x = []
+    edge_y = []
+    for edge in G.edges():
+        x0, y0 = G.nodes[edge[0]]['pos']
+        x1, y1 = G.nodes[edge[1]]['pos']
+        edge_x.append(x0)
+        edge_x.append(x1)
+        edge_x.append(None)
+        edge_y.append(y0)
+        edge_y.append(y1)
+        edge_y.append(None)
+
+    edge_trace = go.Scatter(
+        x=edge_x, y=edge_y,
+        line=dict(width=0.5, color='#444'),
+        hoverinfo='none',
+        mode='lines')
+
+    node_x = []
+    node_y = []
+    node_text = []
+    node_color = []
+
+    for node_id, node in G.nodes.items():
+        x, y = node['pos']
+        node_x.append(x)
+        node_y.append(y)
+
+        node_text.append(f"{node['label']}")
+        node_color.append(node['color'])
+
+    node_trace = go.Scatter(
+        x=node_x, y=node_y,
+        mode='markers+text',
+        hoverinfo='text',
+        marker=dict(showscale=False, color=node_color, size=15, line_width=1.0),
+        text=node_text,
+        textposition="top center",)
+
+    fig = go.Figure(data=[edge_trace, node_trace],
+                 layout=go.Layout(
+                    showlegend=False,
+                    hovermode='closest',
+                    margin=dict(b=0,l=0,r=0,t=0),
+                    xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                    yaxis=dict(showgrid=False, zeroline=False, showticklabels=False))
+                    )
+
+    fig.update_layout(
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)"
+    )
+
+    return fig
+
+def _make_graph(s, a):
+    node_feats, edge_index, node_index = s
+
+    G = nx.Graph() 
+    G.add_edges_from(edge_index.T) 
+    pos = nx.kamada_kawai_layout(G)
+
+    def get_host_conf(host_id):
+        host_vec = HostVector(node_feats[host_id][1:])
+
+        running_services = []
+        for srv_name in HostVector.service_idx_map:
+            if host_vec.is_running_service(srv_name):
+                running_services.append(srv_name.split('_')[-1])
+
+        return ", ".join(running_services)
+
+    def get_host_string(i):
+        node_idx = node_index[i]
+        host_conf = get_host_conf(i)
+        node_action = a.name if np.all(np.array(a.target) == np.array(node_idx)) else ""
+
+        access_colors = ['black', 'orange', 'red']
+        node_str = f"<span style='color:{access_colors[is_host_controlled(i)]};'>{node_idx}</span>"
+
+        return f"{node_str} <b>{node_action}</b><br>{host_conf}"
+
+    def is_host_sensitive(i):
+        host_vec = HostVector(node_feats[i][1:])
+        return host_vec.value > 0
+
+    def is_host_controlled(i):
+        host_vec = HostVector(node_feats[i][1:])
+        return int(host_vec.access)
+
+    def get_node_color(i):
+        if node_index[i][1] == -1:
+            return 'seagreen'
+        else:
+            return 'red' if is_host_sensitive(i) else 'skyblue'
+
+    node_labels = {i: f"Subnet {node_index[i][0]}" if node_index[i][1] == -1 else get_host_string(i) for i in G.nodes}
+    node_types = {i: 'subnet' if node_index[i][1] == -1 else 'node' for i in G.nodes}
+    node_colors = {i: get_node_color(i) for i in G.nodes}
+
+    nx.set_node_attributes(G, pos, 'pos')
+    nx.set_node_attributes(G, node_labels, 'label')
+    nx.set_node_attributes(G, node_types, 'type')
+    nx.set_node_attributes(G, node_colors, 'color')
+
+    return G
+
+def plot_network(env, s, last_action):
+    s_graph = convert_to_graph(s)
+    G = _make_graph(s_graph, last_action)
+    fig = _plot(G, env)
+    
+    # use:
+    # fig.show()
+
+    # or:
+    # pio.kaleido.scope.mathjax = None
+    # fig.write_image(f"trace.pdf", width=1200, height=600, scale=1.0)
+
+    return fig
