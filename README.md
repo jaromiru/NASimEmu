@@ -55,6 +55,9 @@ for _ in range(3):
 ## Gym integration
 NASimEmu currently doesn't support many of the default agents made for gym, because it uses custom environment spaces (the size of the environment is unknown to the attacker at the beginning) and an action space that changes at each step when a new host is discovered.
 
+## Implemented Deep RL Agents
+See the separate repository [NASimEmu-agents](https://github.com/jaromiru/NASimEmu-agents) for implemented agents.
+
 ## Simulation
 The simulation is based on Network Attack Simulator and you can read its docs here: https://networkattacksimulator.readthedocs.io
 
