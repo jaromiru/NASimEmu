@@ -18,7 +18,7 @@ def get_possible_actions(env, s):
 
     return possible_actions
 
-def _gen_edge_index(node_index, subnets):
+def _gen_edge_index_v1(node_index, subnets):
     def complete_graph(n):
         return [(a, b) for a in n for b in n if a != b]
 
@@ -38,7 +38,32 @@ def _gen_edge_index(node_index, subnets):
     edge_index = np.concatenate(edge_index).T
     return edge_index
 
-def convert_to_graph(s):
+def _gen_edge_index_v2(node_index, subnets):
+    def complete_graph(n):
+        return [(a, b) for a in n for b in n if a != b]
+
+    edge_index = []
+
+    # hosts in subnets are connected to their subnet
+    for subnet in subnets:
+        hosts_in_subnet = np.flatnonzero( node_index[:, 0] == subnet )
+        subnet_node = np.flatnonzero( (node_index[:, 0] == subnet) * (node_index[:, 1] == -1))[0]
+
+        edge_index.append( [(x, subnet_node) for x in hosts_in_subnet if x != subnet_node] )
+        edge_index.append( [(subnet_node, x) for x in hosts_in_subnet if x != subnet_node] )
+        # edge_index.append( complete_graph(hosts_in_subnet) )
+
+    # all subnets together
+    sub_index = np.flatnonzero( node_index[:, 1] == -1 )
+    if len(sub_index) > 1:
+        edge_index.append( complete_graph(sub_index) )
+
+    # print(edge_index)
+    edge_index = np.concatenate(edge_index).T
+    return edge_index
+
+# v1 = nodes are connected to each other; v2 = they're not
+def convert_to_graph(s, version=1):
     hosts_discovered = s[:-1, HostVector._discovered_idx] == 1
 
     host_feats = s[:-1][hosts_discovered]
@@ -63,7 +88,12 @@ def convert_to_graph(s):
     node_index = np.concatenate( [host_index, subnet_index] )
 
     # create edge index
-    edge_index = _gen_edge_index(node_index, subnets_discovered)
+    if version == 1:
+        edge_index = _gen_edge_index_v1(node_index, subnets_discovered)
+    elif version == 2:
+        edge_index = _gen_edge_index_v2(node_index, subnets_discovered)
+    else:
+        raise NotImplementedError()
 
     return node_feats, edge_index, node_index
 
@@ -91,6 +121,8 @@ def _plot(G, env):
     node_y = []
     node_text = []
     node_color = []
+    node_symbols = []
+    node_line_widths = []
 
     for node_id, node in G.nodes.items():
         x, y = node['pos']
@@ -99,12 +131,14 @@ def _plot(G, env):
 
         node_text.append(f"{node['label']}")
         node_color.append(node['color'])
+        node_symbols.append(node['symbol'])
+        node_line_widths.append(node['line_width'])
 
     node_trace = go.Scatter(
         x=node_x, y=node_y,
         mode='markers+text',
         hoverinfo='text',
-        marker=dict(showscale=False, color=node_color, size=15, line_width=1.0),
+        marker=dict(showscale=False, color=node_color, symbol=node_symbols, size=40, line_width=node_line_widths),
         text=node_text,
         textposition="top center",)
 
@@ -119,7 +153,11 @@ def _plot(G, env):
 
     fig.update_layout(
         paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)"
+        plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(
+            # family="Courier New, monospace",
+            size=25
+        )
     )
 
     return fig
@@ -139,7 +177,11 @@ def _make_graph(s, a):
             if host_vec.is_running_service(srv_name):
                 running_services.append(srv_name.split('_')[-1])
 
-        return ", ".join(running_services)
+        service_str = ", ".join(running_services)
+        if service_str:
+            service_str = "<br>" + service_str
+
+        return service_str
 
     def get_host_string(i):
         node_idx = node_index[i]
@@ -149,7 +191,7 @@ def _make_graph(s, a):
         access_colors = ['black', 'orange', 'red']
         node_str = f"<span style='color:{access_colors[is_host_controlled(i)]};'>{node_idx}</span>"
 
-        return f"{node_str} <b>{node_action}</b><br>{host_conf}"
+        return f"{node_str} <b>{node_action}</b>{host_conf}"
 
     def is_host_sensitive(i):
         host_vec = HostVector(node_feats[i][1:])
@@ -165,19 +207,24 @@ def _make_graph(s, a):
         else:
             return 'red' if is_host_sensitive(i) else 'skyblue'
 
+
     node_labels = {i: f"Subnet {node_index[i][0]}" if node_index[i][1] == -1 else get_host_string(i) for i in G.nodes}
     node_types = {i: 'subnet' if node_index[i][1] == -1 else 'node' for i in G.nodes}
     node_colors = {i: get_node_color(i) for i in G.nodes}
+    node_symbols = {i: 'triangle-up' if node_index[i][1] == -1 else 'circle' for i in G.nodes}
+    node_line_widths = {i: 4.0 if np.all(np.array(a.target) == np.array(node_index[i])) else 1.0 for i in G.nodes}
 
     nx.set_node_attributes(G, pos, 'pos')
     nx.set_node_attributes(G, node_labels, 'label')
     nx.set_node_attributes(G, node_types, 'type')
     nx.set_node_attributes(G, node_colors, 'color')
+    nx.set_node_attributes(G, node_symbols, 'symbol')
+    nx.set_node_attributes(G, node_line_widths, 'line_width')
 
     return G
 
 def plot_network(env, s, last_action):
-    s_graph = convert_to_graph(s)
+    s_graph = convert_to_graph(s, version=2)
     G = _make_graph(s_graph, last_action)
     fig = _plot(G, env)
     
