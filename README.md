@@ -7,6 +7,8 @@
 ## Introduction
 This project is based on [Network Attack Simulator](https://github.com/Jjschwartz/NetworkAttackSimulator), a framework for simulating offensive reinforcement-learning based agents in a computer network, using the [OpenAI Gym](https://github.com/openai/gym) interface. NaSimEmu extends this framework in two ways. First, it bring changes that allows much more realistic settings. Second, it provides an **emulation with virtual machines**, which share the same interface with simulation. Moreover, the same scenario can be easily run in simulation and emulation. Hence, an agent trained in simulation can be deployed in emulation without change.
 
+The accompanying paper *NASimEmu: Network Attack Simulator & Emulator for Training Agents Generalizing to Novel Scenarios* can be found on [arXiv](https://arxiv.org/abs/2305.17246).
+
 ## Instalation
 Make sure you use latest `pip`:
 ```
