@@ -5,11 +5,15 @@
 </div>
 
 ## Introduction
-This project is based on [Network Attack Simulator](https://github.com/Jjschwartz/NetworkAttackSimulator), a framework for simulating offensive reinforcement-learning based agents in a computer network, using the [OpenAI Gym](https://github.com/openai/gym) interface. NaSimEmu extends this framework in two ways. First, it bring changes that allows much more realistic settings. Second, it provides an **emulation with virtual machines**, which share the same interface with simulation. Moreover, the same scenario can be easily run in simulation and emulation. Hence, an agent trained in simulation can be deployed in emulation without change.
+NASimEmu is a framework for training deep RL agents in offensive penetration-testing scenarios. It includes both a simulator and an emulator so that a simulation-trained agent can be seamlessly deployed in emulation. Additionally, it includes a random generator that can create scenario instances varying in network configuration and size while fixing certain features, such as exploits and privilege escalations. Furthermore, agents can be trained and tested in multiple scenarios simultaneously.
+
+The simulation is based on [Network Attack Simulator](https://github.com/Jjschwartz/NetworkAttackSimulator) and can be used to train and evaluate agents. It is a memory-based fast and parallelizable abstraction of real computer networks and can generate random scenario instances which can vary in network topology, configuration and number of hosts. The emulation is a controlled environment using industry-level tools, such as Vagrant, VirtualBox, and Metasploit. Agents trained in simulation can be transparently deployed in emulation.
+
+NASimEmu introduces a few changes for training general agents that can transfer to novel, unseen scenarios. It includes *dynamic scenarios* that represent prototypical situations, e.g., typical university or corporate networks. In these scenarios, some attributes are fixed (network topology, OSs, services, exploits, etc.), while some are left to chance (network size and hosts' configuration). Lastly, multiple scenarios can be specified for training or testing.
 
 The accompanying paper *NASimEmu: Network Attack Simulator & Emulator for Training Agents Generalizing to Novel Scenarios* can be found on [arXiv](https://arxiv.org/abs/2305.17246).
 
-## Instalation
+## Installation
 Make sure you use latest `pip`:
 ```
 pip install --upgrade pip
