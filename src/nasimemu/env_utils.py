@@ -18,30 +18,27 @@ def get_possible_actions(env, s):
 
     return possible_actions
 
-def _gen_edge_index_v1(node_index, subnets):
-    def complete_graph(n):
-        return [(a, b) for a in n for b in n if a != b]
+def _complete_graph(n):
+    return [(a, b) for a in n for b in n if a != b]
 
+def _gen_edge_index_v1(node_index, subnets):
     edge_index = []
 
     # hosts in subnets are connected together
     for subnet in subnets:
         hosts_in_subnet = np.flatnonzero( node_index[:, 0] == subnet )
-        edge_index.append( complete_graph(hosts_in_subnet) )
+        edge_index.append( _complete_graph(hosts_in_subnet) )
 
     # all subnets together
     sub_index = np.flatnonzero( node_index[:, 1] == -1 )
     if len(sub_index) > 1:
-        edge_index.append( complete_graph(sub_index) )
+        edge_index.append( _complete_graph(sub_index) )
 
     # print(edge_index)
     edge_index = np.concatenate(edge_index).T
     return edge_index
 
 def _gen_edge_index_v2(node_index, subnets):
-    def complete_graph(n):
-        return [(a, b) for a in n for b in n if a != b]
-
     edge_index = []
 
     # hosts in subnets are connected to their subnet
@@ -51,12 +48,12 @@ def _gen_edge_index_v2(node_index, subnets):
 
         edge_index.append( [(x, subnet_node) for x in hosts_in_subnet if x != subnet_node] )
         edge_index.append( [(subnet_node, x) for x in hosts_in_subnet if x != subnet_node] )
-        # edge_index.append( complete_graph(hosts_in_subnet) )
+        # edge_index.append( _complete_graph(hosts_in_subnet) )
 
     # all subnets together
     sub_index = np.flatnonzero( node_index[:, 1] == -1 )
     if len(sub_index) > 1:
-        edge_index.append( complete_graph(sub_index) )
+        edge_index.append( _complete_graph(sub_index) )
 
     # print(edge_index)
     edge_index = np.concatenate(edge_index).T
@@ -64,11 +61,10 @@ def _gen_edge_index_v2(node_index, subnets):
 
 # v1 = nodes are connected to each other; v2 = they're not
 def convert_to_graph(s, version=1):
-    hosts_discovered = s[:-1, HostVector._discovered_idx] == 1
+    # hosts_discovered = s[:-1, HostVector._discovered_idx] == 1
+    # host_feats = s[:-1][hosts_discovered]
 
-    host_feats = s[:-1][hosts_discovered]
-    action_feats = s[-1] # TODO: discarded for now
-
+    host_feats = s[:-1] # skip the result row
     host_index = np.array([HostVector(x).address for x in host_feats])
     # host_index = self.host_index[hosts_discovered]
 
@@ -86,6 +82,7 @@ def convert_to_graph(s, version=1):
     node_feats = np.concatenate( [node_type, node_feats], axis=1 )
 
     node_index = np.concatenate( [host_index, subnet_index] )
+    pos_index = np.concatenate( [np.arange(len(host_index)), np.zeros(len(subnet_index))] ) # for positional encoding
 
     # create edge index
     if version == 1:
@@ -95,7 +92,7 @@ def convert_to_graph(s, version=1):
     else:
         raise NotImplementedError()
 
-    return node_feats, edge_index, node_index
+    return node_feats, edge_index, node_index, pos_index
 
 # inspired from https://plotly.com/python/network-graphs/
 def _plot(G, env):
