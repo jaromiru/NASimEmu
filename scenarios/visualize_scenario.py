@@ -43,15 +43,25 @@ def plot(graph, node_data):
 
 def make_graph(scenario):
     topology = np.array(scenario['topology'])
+
+    # check topology is symetrical
+    assert (topology == topology.T).all()
+
+    # check dimensions
+    assert (topology.shape[0] - 1 == len(scenario['subnets']) == len(scenario['subnet_labels']) == len(scenario['sensitive_hosts']))
+
     graph = nx.from_numpy_array(topology)
-    node_positions = nx.kamada_kawai_layout(graph)
+
+    node_positions = None
+    # node_positions = nx.shell_layout(graph)
+    node_positions = nx.kamada_kawai_layout(graph, pos=node_positions)
     node_positions = np.stack([(node_positions[node]) for node in graph.nodes])
 
     node_data = {}
     node_data['x'] = node_positions[:, 0]
     node_data['y'] = node_positions[:, 1]
 
-    subnet_annotation = lambda node_id: f'<b>Subnet {string.ascii_uppercase[node_id-1]} ({scenario["subnet_labels"][node_id]})</b><br>nodes=[{scenario["subnets"][node_id-1]}], sensitivity={scenario["sensitive_hosts"][node_id]}'
+    subnet_annotation = lambda node_id: f'<b>{string.ascii_uppercase[node_id-1]}: {scenario["subnet_labels"][node_id]}</b><br>nodes=[{scenario["subnets"][node_id-1]}], sens={scenario["sensitive_hosts"][node_id]}'
     node_color = lambda node_id: f'rgb({scenario["sensitive_hosts"][node_id] * 191 + 64}, 64, 64)'
     
     def node_size(node_id):
@@ -61,10 +71,10 @@ def make_graph(scenario):
         else:
             sub_size = sub
 
-        return math.sqrt(sub_size) * 20
+        return math.sqrt(sub_size) * 10
 
     node_data['text']  = ['<b>Attacker</b>' if node_id == 0 else subnet_annotation(node_id) for node_id in graph.nodes]
-    node_data['marker'] = dict(opacity=1.0, size=[20 if node_id == 0 else node_size(node_id) for node_id in graph.nodes], color=['orange' if node_id == 0 else node_color(node_id) for node_id in graph.nodes])
+    node_data['marker'] = dict(opacity=1.0, size=[15 if node_id == 0 else node_size(node_id) for node_id in graph.nodes], color=['orange' if node_id == 0 else node_color(node_id) for node_id in graph.nodes])
 
     return graph, node_data
 
@@ -82,13 +92,14 @@ if __name__ == '__main__':
 
     fig.update_layout(
         paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)"
+        plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(size=8)
     )
 
     # fig.show()
 
-    fig.update_xaxes(range=[-1.5, 1.5])
-    fig.update_yaxes(range=[-1.5, 1.5])
+    fig.update_xaxes(range=[-1.1, 1.1])
+    fig.update_yaxes(range=[-1.1, 1.1])
 
     pdf_file = pathlib.Path(cmd_args.scenario).with_suffix('.pdf')
     print(f'Exporting to "{pdf_file}"')
