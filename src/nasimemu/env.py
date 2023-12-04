@@ -8,6 +8,7 @@ import nasimemu.nasim.scenarios.benchmark as benchmark
 from nasimemu.nasim.envs import NASimEnv
 from nasimemu.nasim.envs.host_vector import HostVector
 from nasimemu.env_emu import EmulatedNASimEnv
+import traceback 
 
 class TerminalAction():
     pass
@@ -110,6 +111,9 @@ class NASimEmuEnv(gym.Env):
         self.host_index = np.array( sorted(host_num_map, key=host_num_map.get) )# fixed order node index
         self.subnet_index = np.array( [(x, -1) for x in range(len(self.env.scenario.subnets))] )
 
+        self.discovered_subnets = set()
+        self.subnet_graph = set() # (from, to)
+
     def _create_action_lists(self):
         exploit_list = sorted(self.env.scenario.exploits.items())
         privesc_list = sorted(self.env.scenario.privescs.items())
@@ -144,6 +148,9 @@ class NASimEmuEnv(gym.Env):
 
         return a
 
+    def _get_subnets(self, s):
+        return {HostVector(x).address[0] for x in s[:-1]}
+
     # action = ((subnet, host), action_id)
     def step(self, action):
         if type(action) in [np.ndarray, list, tuple]:
@@ -164,6 +171,17 @@ class NASimEmuEnv(gym.Env):
         if not self.fully_obs:
             s = self.env_po_wrapper.step(s)
 
+        # track newly discovered subnets and remember the origin
+        if isinstance(a, SubnetScan):
+            s_subnets = self._get_subnets(s)
+            new_subnets = s_subnets - self.discovered_subnets
+            origin_subnet = a.target[0]
+
+            for new_subnet in new_subnets:
+                self.subnet_graph.add( (origin_subnet, new_subnet) )
+
+            self.discovered_subnets = s_subnets
+
         self.step_idx += 1
 
         if self.verbose:
@@ -181,11 +199,12 @@ class NASimEmuEnv(gym.Env):
         i['a_raw'] = a
 
         if self.observation_format == 'graph':
-            s = env_utils.convert_to_graph(s)
+            s = env_utils.convert_to_graph(s, self.subnet_graph)
 
         i['s_true'] = s
         i['d_true'] = d
         i['step_idx'] = self.step_idx
+        i['subnet_graph'] = self.subnet_graph
 
         if (self.step_limit is not None) and (self.step_idx >= self.step_limit):
             d = True
@@ -207,8 +226,11 @@ class NASimEmuEnv(gym.Env):
         if not self.fully_obs:
             s = self.env_po_wrapper.reset(s)
 
+        self.discovered_subnets = self._get_subnets(s)
+        self.subnet_graph = set()
+
         if self.observation_format == 'graph':
-            s = env_utils.convert_to_graph(s)
+            s = env_utils.convert_to_graph(s, self.subnet_graph)
 
         # break the tie with random offset
         if self.random_init:
