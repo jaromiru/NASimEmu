@@ -198,8 +198,11 @@ class NASimEmuEnv(gym.Env):
         i['s_raw'] = s
         i['a_raw'] = a
 
-        if self.observation_format == 'graph':
-            s = env_utils.convert_to_graph(s, self.subnet_graph)
+        if self.observation_format in ['graph', 'graph_v1']:
+            s = env_utils.convert_to_graph(s, self.subnet_graph, version=1)
+
+        if self.observation_format == 'graph_v2':
+            s = env_utils.convert_to_graph(s, self.subnet_graph, version=2)
 
         i['s_true'] = s
         i['d_true'] = d
@@ -229,8 +232,11 @@ class NASimEmuEnv(gym.Env):
         self.discovered_subnets = self._get_subnets(s)
         self.subnet_graph = set()
 
-        if self.observation_format == 'graph':
-            s = env_utils.convert_to_graph(s, self.subnet_graph)
+        if self.observation_format in ['graph', 'graph_v1']:
+            s = env_utils.convert_to_graph(s, self.subnet_graph, version=1)
+
+        if self.observation_format == 'graph_v2':
+            s = env_utils.convert_to_graph(s, self.subnet_graph, version=2)
 
         # break the tie with random offset
         if self.random_init:

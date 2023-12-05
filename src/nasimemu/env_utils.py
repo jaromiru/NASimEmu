@@ -65,10 +65,6 @@ def _gen_edge_index_v2(node_index, subnets, subnet_graph):
 
     host_len = len(node_index) - len(subnets)
 
-    print()
-    print(subnet_graph)
-    print(subnets)
-
     for subnet_edge in subnet_graph:
         s_from = subnets.index(subnet_edge[0]) + host_len
         s_to   = subnets.index(subnet_edge[1]) + host_len
