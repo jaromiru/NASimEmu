@@ -64,7 +64,7 @@ class PartiallyObservableWrapper():
 
 # observation_format in ['matrix', 'graph']
 class NASimEmuEnv(gym.Env):
-    def __init__(self, scenario_name, emulate=False, step_limit=None, random_init=False, observation_format='matrix', fully_obs=False, verbose=False):
+    def __init__(self, scenario_name, emulate=False, step_limit=None, random_init=False, observation_format='matrix', fully_obs=False, augment_with_action=False, verbose=False):
         # different processes need different seeds
         random.seed()
         np.random.seed()
@@ -73,6 +73,7 @@ class NASimEmuEnv(gym.Env):
         self.step_limit = step_limit
         self.verbose = verbose
         self.fully_obs = fully_obs
+        self.augment_with_action = augment_with_action
         self.observation_format = observation_format
 
         self.scenario_name = scenario_name
@@ -151,6 +152,21 @@ class NASimEmuEnv(gym.Env):
     def _get_subnets(self, s):
         return {HostVector(x).address[0] for x in s[:-1]}
 
+    def _augment_with_action(self, s, action):
+        action_matrix = np.zeros((len(s), len(self.action_list)), dtype=np.float32)
+
+        if action is not None:
+            target, action_id = action
+
+            host_addresses = [HostVector(host_data).address for host_data in s[:-1]]
+            host_index = host_addresses.index(tuple(target))
+
+            action_matrix[host_index, action_id] = 1.
+
+        s = np.concatenate((s, action_matrix), axis=1)
+
+        return s
+
     # action = ((subnet, host), action_id)
     def step(self, action):
         if type(action) in [np.ndarray, list, tuple]:
@@ -170,6 +186,10 @@ class NASimEmuEnv(gym.Env):
         r /= 10. # reward scaling
         if not self.fully_obs:
             s = self.env_po_wrapper.step(s)
+
+        # optionally, include the last performed action
+        if self.augment_with_action:
+            s = self._augment_with_action(s, action)
 
         # track newly discovered subnets and remember the origin
         if isinstance(a, SubnetScan):
@@ -198,6 +218,7 @@ class NASimEmuEnv(gym.Env):
         i['s_raw'] = s
         i['a_raw'] = a
 
+        # optionally, convert the observation into a graph
         if self.observation_format in ['graph', 'graph_v1']:
             s = env_utils.convert_to_graph(s, self.subnet_graph, version=1)
 
@@ -228,6 +249,10 @@ class NASimEmuEnv(gym.Env):
 
         if not self.fully_obs:
             s = self.env_po_wrapper.reset(s)
+
+        # optionally, include the last performed action (zeros in reset())
+        if self.augment_with_action:
+            s = self._augment_with_action(s, None)
 
         self.discovered_subnets = self._get_subnets(s)
         self.subnet_graph = set()
