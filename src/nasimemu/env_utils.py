@@ -181,6 +181,8 @@ def _make_graph(s, a):
     G.add_edges_from(edge_index.T) 
     pos = nx.kamada_kawai_layout(G)
 
+    a_target = (-1, -1) if a.__class__.__name__ == "TerminalAction" else a.target
+
     def get_host_conf(host_id):
         host_vec = HostVector(node_feats[host_id][1:])
 
@@ -198,7 +200,8 @@ def _make_graph(s, a):
     def get_host_string(i):
         node_idx = node_index[i]
         host_conf = get_host_conf(i)
-        node_action = a.name if np.all(np.array(a.target) == np.array(node_idx)) else ""
+
+        node_action = a.name if np.all(np.array(a_target) == np.array(node_idx)) else ""
 
         access_colors = ['black', 'orange', 'red']
         node_str = f"<span style='color:{access_colors[is_host_controlled(i)]};'>{node_idx}</span>"
@@ -224,7 +227,7 @@ def _make_graph(s, a):
     node_types = {i: 'subnet' if node_index[i][1] == -1 else 'node' for i in G.nodes}
     node_colors = {i: get_node_color(i) for i in G.nodes}
     node_symbols = {i: 'triangle-up' if node_index[i][1] == -1 else 'circle' for i in G.nodes}
-    node_line_widths = {i: 4.0 if np.all(np.array(a.target) == np.array(node_index[i])) else 1.0 for i in G.nodes}
+    node_line_widths = {i: 4.0 if np.all(np.array(a_target) == np.array(node_index[i])) else 1.0 for i in G.nodes}
 
     nx.set_node_attributes(G, pos, 'pos')
     nx.set_node_attributes(G, node_labels, 'label')
