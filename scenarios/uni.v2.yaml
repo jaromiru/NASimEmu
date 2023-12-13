@@ -49,38 +49,38 @@ exploits:
   e_proftpd:
     service: 21_linux_proftpd
     os: linux
-    prob: 1.0
+    prob: 0.8
     cost: 1
     access: user
   e_drupal:
     service: 80_linux_drupal
     os: linux
-    prob: 1.0
+    prob: 0.8
     cost: 1
     access: user
   e_phpwiki:
     service: 80_linux_phpwiki
     os: linux
-    prob: 1.0
+    prob: 0.8
     cost: 1
     access: user
   e_elasticsearch:
     service: 9200_windows_elasticsearch
     os: windows
-    prob: 1.0
+    prob: 0.8
     cost: 1
     access: root
   e_wp_ninja:
     service: 80_windows_wp_ninja
     os: windows
-    prob: 1.0
+    prob: 0.8
     cost: 1
     access: user
 privilege_escalation:
   pe_kernel:
     process: ~
     os: linux
-    prob: 1.0
+    prob: 0.8
     cost: 1
     access: root
 service_scan_cost: 1
