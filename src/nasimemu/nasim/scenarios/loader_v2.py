@@ -1,7 +1,7 @@
 """This module contains functionality for loading network scenarios from yaml
 files.
 """
-import math, random
+import math, random, numpy as np
 
 import nasimemu.nasim.scenarios.utils as u
 from nasimemu.nasim.scenarios import Scenario
@@ -431,9 +431,22 @@ class ScenarioLoaderV2:
 
                     processes = [x for x in self.processes if is_for_os(x, os)]
 
+                    # uniform distribution
+                    # no_services = random.randint(1, len(non_sensitive_services))
+                    # no_processes = random.randint(1, len(processes))
+
+                    # skewed distribution: each element has a weight p^n
+                    def skew_dist(n, p=0.5):
+                        vals = np.arange(n) + 1
+                        dist = p ** vals
+                        return random.choices(vals, weights=dist, k=1)[0]
+
+                    no_services = skew_dist(len(non_sensitive_services))
+                    no_processes = skew_dist(len(processes))
+
                     host_config = {'os': os,
-                                   'services': random.sample(non_sensitive_services, random.randint(1, len(non_sensitive_services))),
-                                   'processes': random.sample(processes, random.randint(1, len(processes)))}
+                                   'services': random.sample(non_sensitive_services, no_services),
+                                   'processes': random.sample(processes, no_processes)}
 
                     # if this host is sensitive, add at least one sensitive service
                     if (s_id, host_id) in self.sensitive_hosts:
