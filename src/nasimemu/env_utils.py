@@ -111,21 +111,45 @@ def convert_to_graph(s, subnet_graph, version=1):
 
 # inspired from https://plotly.com/python/network-graphs/
 def _plot(G):
-    edge_x = []
-    edge_y = []
-    for edge in G.edges():
-        x0, y0 = G.nodes[edge[0]]['pos']
-        x1, y1 = G.nodes[edge[1]]['pos']
-        edge_x.append(x0)
-        edge_x.append(x1)
-        edge_x.append(None)
-        edge_y.append(y0)
-        edge_y.append(y1)
-        edge_y.append(None)
+    def get_edges(type):
+        edge_x = []
+        edge_y = []
+
+        for edge in G.edges():
+            node_in  = G.nodes[edge[0]]
+            node_out = G.nodes[edge[1]]
+
+            if type == 'subnet': # both have to be subnets
+                if not (node_in['type'] == 'subnet' and node_out['type'] == 'subnet'):
+                    continue
+
+            if type == 'node':  # both can't be subnets
+                if node_in['type'] == 'subnet' and node_out['type'] == 'subnet':
+                    continue
+
+            x0, y0 = node_in['pos']
+            x1, y1 = node_out['pos']
+            edge_x.append(x0)
+            edge_x.append(x1)
+            edge_x.append(None)
+            edge_y.append(y0)
+            edge_y.append(y1)
+            edge_y.append(None)
+
+        return edge_x, edge_y
+
+    node_edges = get_edges(type='node')
+    subnet_edges = get_edges(type='subnet')
 
     edge_trace = go.Scatter(
-        x=edge_x, y=edge_y,
-        line=dict(width=0.5, color='#444'),
+        x=node_edges[0], y=node_edges[1],
+        line=dict(width=1, color='black', dash='dash'),
+        hoverinfo='none',
+        mode='lines')
+
+    subnet_trace = go.Scatter(
+        x=subnet_edges[0], y=subnet_edges[1],
+        line=dict(width=1, color='black'),
         hoverinfo='none',
         mode='lines')
 
@@ -150,11 +174,12 @@ def _plot(G):
         x=node_x, y=node_y,
         mode='markers+text',
         hoverinfo='text',
-        marker=dict(showscale=False, color=node_color, symbol=node_symbols, size=40, line_width=node_line_widths),
+        marker=dict(showscale=False, color=node_color, symbol=node_symbols, size=40, line_width=node_line_widths, line_color="black"),
         text=node_text,
-        textposition="top center",)
+        # text_color="black",
+        textposition="top center")
 
-    fig = go.Figure(data=[edge_trace, node_trace],
+    fig = go.Figure(data=[edge_trace, subnet_trace, node_trace],
                  layout=go.Layout(
                     showlegend=False,
                     hovermode='closest',
@@ -168,7 +193,8 @@ def _plot(G):
         plot_bgcolor="rgba(0,0,0,0)",
         font=dict(
             # family="Courier New, monospace",
-            size=25
+            size=25,
+            color="black"
         )
     )
 
@@ -218,16 +244,16 @@ def _make_graph(s, a):
 
     def get_node_color(i):
         if node_index[i][1] == -1:
-            return 'seagreen'
+            return 'grey'
         else:
-            return 'red' if is_host_sensitive(i) else 'skyblue'
+            return 'red' if is_host_sensitive(i) else 'white'
 
 
     node_labels = {i: f"Subnet {node_index[i][0]}" if node_index[i][1] == -1 else get_host_string(i) for i in G.nodes}
     node_types = {i: 'subnet' if node_index[i][1] == -1 else 'node' for i in G.nodes}
     node_colors = {i: get_node_color(i) for i in G.nodes}
     node_symbols = {i: 'triangle-up' if node_index[i][1] == -1 else 'circle' for i in G.nodes}
-    node_line_widths = {i: 4.0 if np.all(np.array(a_target) == np.array(node_index[i])) else 1.0 for i in G.nodes}
+    node_line_widths = {i: 6.0 if np.all(np.array(a_target) == np.array(node_index[i])) else 1.0 for i in G.nodes}
 
     nx.set_node_attributes(G, pos, 'pos')
     nx.set_node_attributes(G, node_labels, 'label')
