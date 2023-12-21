@@ -18,6 +18,8 @@ DMZ = 1
 SENSITIVE = 2
 USER = 3
 
+P_SENSITIVE = 0.8
+
 # Number of time to attempt to find valid vulnerable config
 VUL_RETRIES = 5
 
@@ -415,20 +417,23 @@ class ScenarioGenerator:
 
         return action_probs
 
+    # In new version, we randomly pick a subnet >= 3 (if random_goal) and all the nodes in it be sensitive with P_SENSITIVE (0.8 by default)
     def _generate_sensitive_hosts(self, r_sensitive, r_user, random_goal):
         sensitive_hosts = {}
+
         # first sensitive host is first host in SENSITIVE network
         sensitive_hosts[(SENSITIVE, 0)] = r_sensitive
 
-        # second sensitive host in USER network
         if random_goal and len(self.subnets) > SENSITIVE:
-            # randomly choose user host to be goal
             subnet_id = np.random.randint(USER, len(self.subnets))
-            host_id = np.random.randint(0, self.subnets[subnet_id])
-            sensitive_hosts[(subnet_id, host_id)] = r_user
+            for host_id in range(self.subnets[subnet_id]):
+                if np.random.rand() < P_SENSITIVE:
+                    sensitive_hosts[(subnet_id, host_id)] = r_user
+
         else:
             # second last host in USER network is goal
             sensitive_hosts[(len(self.subnets)-1, self.subnets[-1]-1)] = r_user
+
         self.sensitive_hosts = sensitive_hosts
 
     def _generate_uniform_hosts(self):
