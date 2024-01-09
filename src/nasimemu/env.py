@@ -184,6 +184,8 @@ class NASimEmuEnv(gym.Env):
             d = False # ignore done flag from the environment, the agent has to choose to terminate
 
         r /= 10. # reward scaling
+        self.r_tot += r
+
         if not self.fully_obs:
             s = self.env_po_wrapper.step(s)
 
@@ -231,6 +233,7 @@ class NASimEmuEnv(gym.Env):
         i['d_true'] = d
         i['step_idx'] = self.step_idx
         i['subnet_graph'] = self.subnet_graph
+        i['r_tot'] = self.r_tot
 
         if (self.step_limit is not None) and (self.step_idx >= self.step_limit):
             d = True
@@ -245,6 +248,8 @@ class NASimEmuEnv(gym.Env):
 
     def reset(self):
         self.step_idx = 0
+        self.r_tot = 0.
+
         self._generate_env() # generate new env
 
         s = self.env.reset()
@@ -278,6 +283,7 @@ class NASimEmuEnv(gym.Env):
             print("-------")
             print("reset()")
             print("-------")
+
             self.env.render_state()
             self.env.render(obs=s)
 
