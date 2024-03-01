@@ -186,6 +186,9 @@ class NASimEmuEnv(gym.Env):
         r /= 10. # reward scaling
         self.r_tot += r
 
+        if r > 0:
+            self.captured += 1
+
         if not self.fully_obs:
             s = self.env_po_wrapper.step(s)
 
@@ -234,6 +237,7 @@ class NASimEmuEnv(gym.Env):
         i['step_idx'] = self.step_idx
         i['subnet_graph'] = self.subnet_graph
         i['r_tot'] = self.r_tot
+        i['captured'] = self.captured
 
         if (self.step_limit is not None) and (self.step_idx >= self.step_limit):
             d = True
@@ -249,6 +253,7 @@ class NASimEmuEnv(gym.Env):
     def reset(self):
         self.step_idx = 0
         self.r_tot = 0.
+        self.captured = 0
 
         self._generate_env() # generate new env
 
