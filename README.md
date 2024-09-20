@@ -7,7 +7,7 @@
 ## Related
 - [Repository with deep RL agents](https://github.com/jaromiru/NASimEmu-agents)
 - *NASimEmu: Network Attack Simulator & Emulator for Training Agents Generalizing to Novel Scenarios*, SECAI workshop @ ESORICS 2023, [preprint](https://arxiv.org/abs/2305.17246)
-- *Applications of Deep Reinforcement Learning in Practical Sequential Information Acquisition Problems*, Chapter 6 - *Case Study: Automated Penetration Testing*, Doctoral Dissertation, CTU, 2024, [link](https://dspace.cvut.cz/handle/10467/114377)
+- *Applications of Deep Reinforcement Learning in Practical Sequential Information Acquisition Problems*, Chapter 6 - *Case Study: Automated Penetration Testing*, Doctoral Dissertation, CTU, 2024, [link](https://dspace.cvut.cz/bitstream/handle/10467/114377/F3-D-2024-Janisch-Jaromir-dizertace.pdf)
 
 ## Introduction
 NASimEmu is a framework for training deep RL agents in offensive penetration-testing scenarios. It includes both a simulator and an emulator so that a simulation-trained agent can be seamlessly deployed in emulation. Additionally, it includes a random generator that can create scenario instances varying in network configuration and size while fixing certain features, such as exploits and privilege escalations. Furthermore, agents can be trained and tested in multiple scenarios simultaneously.
